@@ -116,7 +116,7 @@ const esc=s=>s.replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&qu
 const TITLE=v=>'PostgreSQL<br>Documentation<br>'+(meta?meta.label:v);
 
 document.querySelectorAll('.cover').forEach(c=>c.onclick=()=>openBook(c.dataset.v));
-$('#home').onclick=()=>{$('#reader').style.display='none';$('#shelf').style.display='flex';flip&&flip.destroy();flip=null;$('#book').innerHTML='';hidePop()};
+$('#home').onclick=()=>{$('#reader').style.display='none';$('#shelf').style.display='flex';flip&&flip.destroy();flip=null;const bkEl=$('#book');if(bkEl)bkEl.innerHTML='';hidePop()};
 $('#tocb').onclick=()=>$('#side').classList.toggle('on');
 $('#fs').onclick=()=>document.fullscreenElement?document.exitFullscreen():document.documentElement.requestFullscreen();
 document.querySelectorAll('#tabs button').forEach(b=>b.onclick=()=>{tab=b.dataset.t;renderPane()});
@@ -130,7 +130,7 @@ async function openBook(v){
 }
 function build(start){
  const st=$('#stage');const h=Math.min(st.clientHeight-30,(st.clientWidth-120)/2*Hh/W);const w=Math.round(h*W/Hh);PW=w;
- const bk=$('#book');bk.innerHTML='';
+ let bk=$('#book');if(!bk){bk=document.createElement('div');bk.id='book';st.insertBefore(bk,$('#zr'))}bk.innerHTML='';
  const mk=(cls,html)=>{const d=document.createElement('div');d.className='pg '+cls;d.innerHTML=html;return d};
  bk.appendChild(mk('hard',`<div><div style="font-size:15px;letter-spacing:.3em;color:#e9d9a8">THE</div><div style="font-size:70px">${ver}</div><div>${TITLE(ver)}</div></div>`));
  bk.appendChild(mk('hard','<div style="font-size:13px;color:#e9d9a8">PostgreSQL Global<br>Development Group</div>'));
