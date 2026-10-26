@@ -232,10 +232,27 @@ function renderPane(){
 }
 async function search(q,out){q=q.trim();lastQ=q;if(!q)return;out.innerHTML='<a>Searching…</a>';
  if(!searchIdx[ver])searchIdx[ver]=await (await fetch(`books/${ver}/search.json`)).json();
- const ql=q.toLowerCase(),res=[];const T=searchIdx[ver];
- for(let i=0;i<T.length&&res.length<60;i++){const k=T[i].toLowerCase().indexOf(ql);if(k>=0)res.push([i+1,T[i].slice(Math.max(0,k-45),k+90)])}
- out.innerHTML=res.length?'':'<a>No matches</a>';
- res.forEach(([p,t])=>{const a=document.createElement('a');a.innerHTML=`<span>${p}</span>${esc(t)}`;a.onclick=()=>goPage(p);out.appendChild(a)})}
+ const ql=q.toLowerCase(),T=searchIdx[ver],first=meta.toc.length?meta.toc[0][0]:1,MAX=100000,CAP=6;
+ const chapOf=p=>{let c=null,part=null;for(const [pg,t] of meta.toc){if(pg>p)break;if(/^Part /.test(t))part=t;else c=t}return {part,c}};
+ const HR=/(\d{1,2}\.\d{1,2}(?:\.\d{1,2})?)\. ((?:[A-Z][\w\-\/']*(?: |$)){1,8})/g;
+ const groups=new Map();let n=0,total=0,sect='';
+ for(let i=0;i<T.length;i++){const txt=T[i],low=txt.toLowerCase();
+  const heads=[];if(i+1>=first){HR.lastIndex=0;let m;while(m=HR.exec(txt))heads.push([m.index,m[1]+'. '+m[2].trim().replace(/( [A-Z])+$/,'')])}
+  if(i+1<first)continue;
+  let k=low.indexOf(ql);if(k>=0&&/\.{8}/.test(txt.slice(Math.max(0,k-60),k+90)))k=-1;
+  while(k>=0){total++;
+   if(n<MAX){let s=sect;for(const h of heads){if(h[0]<=k)s=h[1];else break}
+    const {part,c}=chapOf(i+1),key=(part||'')+'|'+(c||'Front matter');
+    if(!groups.has(key))groups.set(key,{part,c:c||'Front matter',items:[]});
+    groups.get(key).items.push([i+1,s,txt.slice(Math.max(0,k-45),k+90)]);n++}else break
+   break}
+  if(heads.length)sect=heads[heads.length-1][1];
+  if(n>=MAX)break}
+ out.innerHTML=n?`<div style="color:var(--mut);font-size:12px;margin:6px 0">${n} page${n>1?"s":""} · ${groups.size} chapter${groups.size>1?'s':''}</div>`:'<a>No matches</a>';
+ const hl=t=>esc(t).replace(new RegExp(q.replace(/[.*+?^${}()|[\]\\]/g,'\\$&').replace(/&/g,'&amp;'),'gi'),m=>'<mark>'+m+'</mark>');
+ groups.forEach(g=>{const h=document.createElement('div');h.className='item';h.style.cssText='cursor:default;background:rgba(127,127,127,.15);font-weight:600';
+  h.innerHTML=(g.part?`<div style="font-size:11px;color:var(--mut);font-weight:400">${esc(g.part)}</div>`:'')+esc(g.c)+` <span style="font-weight:400;color:var(--mut)">(${g.items.length} page${g.items.length>1?'s':''})</span>`;out.appendChild(h);
+  g.items.slice(0,CAP).forEach(([p,s,t])=>{const a=document.createElement('a');a.style.paddingLeft='18px';a.innerHTML=`<span>${p}</span>`+(s?`<div style="font-size:11px;color:var(--mut)">§ ${esc(s)}</div>`:'')+hl(t);a.onclick=()=>goPage(p);out.appendChild(a)});if(g.items.length>CAP){const m=document.createElement('a');m.style.cssText='padding-left:18px;color:var(--mut)';m.textContent='+ '+(g.items.length-CAP)+' more pages — show all';m.onclick=()=>{g.items.slice(CAP).forEach(([p,s,t])=>{const a=document.createElement('a');a.style.paddingLeft='18px';a.innerHTML=`<span>${p}</span>`+(s?`<div style="font-size:11px;color:var(--mut)">§ ${esc(s)}</div>`:'')+hl(t);a.onclick=()=>goPage(p);m.before(a)});m.remove()};out.appendChild(m)}})}
 function renderSaved(pane){
  const b=bms(),h=hls();
  pane.insertAdjacentHTML('beforeend',`<div style="color:var(--mut);font-size:12px;margin-bottom:6px">Bookmarks</div>`);
@@ -265,3 +282,6 @@ function renderSaved(pane){
   document.querySelectorAll('.pg[data-n]').forEach(p=>paintHl(+p.dataset.n));paintBm();renderPane();toast('Imported')}catch(e){toast('Invalid file')}};f.click()};
 }
 </script></body></html>
+
+
+
