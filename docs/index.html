@@ -18,7 +18,7 @@ body{font-family:Georgia,'Times New Roman',serif;color:var(--ink);background:rad
 .cover b{font-size:44px;color:var(--gold);font-weight:normal}.cover small{letter-spacing:.25em;color:#e9d9a8}
 .cover .t{font-size:14px;color:#f3e6bf;border-top:1px solid var(--gold);border-bottom:1px solid var(--gold);padding:8px 0}
 .v16{background:linear-gradient(135deg,#1f3a5f,#14263f)}.v17{background:linear-gradient(135deg,#6a1f2b,#41111a)}
-.v18{background:linear-gradient(135deg,#1f5a46,#123a2c)}.v19{background:linear-gradient(135deg,#5a3d1f,#3a2510)}
+.v18{background:linear-gradient(135deg,#1f5a46,#123a2c)}.v19{background:linear-gradient(135deg,#5a3d1f,#3a2510)}.vcitus{background:linear-gradient(135deg,#1f3d5a,#10253a)}.vcitus b{font-size:34px}
 .hint{color:var(--mut);font-size:13px;margin-top:18px}
 .cta{margin:38px 0 0;max-width:640px;width:100%;display:flex;gap:16px;align-items:center;justify-content:space-between;flex-wrap:wrap;
  background:#1b110bcc;border:1px solid #6b5033;border-radius:10px;padding:16px 20px}
@@ -79,6 +79,7 @@ textarea.nt{display:block;width:100%;min-height:54px;margin-top:6px;background:#
   <button class="cover v17" data-v="17"><small>THE</small><b>17</b><div class="t">PostgreSQL Documentation<br>17.11</div></button>
   <button class="cover v18" data-v="18"><small>THE</small><b>18</b><div class="t">PostgreSQL Documentation<br>18.6</div></button>
   <button class="cover v19" data-v="19"><small>THE</small><b>19</b><div class="t">PostgreSQL Documentation<br>19</div></button>
+ <button class="cover vcitus" data-v="citus"><small>THE</small><b>Citus</b><div class="t">Citus Documentation<br>13.0.1</div></button>
  </div>
  <div class="hint">Choose a book to open it &middot; your page, highlights and bookmarks are remembered in this browser</div>
  <div class="cta">
@@ -115,7 +116,7 @@ const store={get:k=>{try{return JSON.parse(localStorage.getItem(k))}catch(e){ret
 const hls=()=>store.get('pgl-hl-'+ver)||[];const bms=()=>store.get('pgl-bm-'+ver)||[];const notes=()=>store.get('pgl-nt-'+ver)||[];
 const toast=m=>{const t=$('#toast');t.textContent=m;t.style.display='block';clearTimeout(toast.t);toast.t=setTimeout(()=>t.style.display='none',1800)};
 const esc=s=>s.replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
-const TITLE=v=>'PostgreSQL<br>Documentation<br>'+(meta?meta.label:v);
+const TITLE=v=>(meta&&meta.title?meta.title:'PostgreSQL')+'<br>Documentation<br>'+(meta?meta.label:v);
 
 function markResume(){document.querySelectorAll('.cover').forEach(c=>{const o=c.querySelector('.resume');o&&o.remove();const n=+localStorage['pg'+c.dataset.v]-1;
  if(n>=1){const d=document.createElement('div');d.className='resume';d.textContent='Continue · page '+n;c.appendChild(d)}})}
@@ -142,7 +143,7 @@ function build(start){
  for(let i=1;i<=N;i++){const p=mk('','<img alt="Page '+i+'" data-n="'+i+'"><div class="hl"></div><div class="tl"></div><div class="num">'+i+'</div>');p.dataset.n=i;bk.appendChild(p)}
  if(N%2)bk.appendChild(mk('',''));
  bk.appendChild(mk('hard','<div style="font-size:13px;color:#e9d9a8">End</div>'));
- bk.appendChild(mk('hard','<div style="font-size:15px">PostgreSQL<br>'+meta.label+'</div>'));
+ bk.appendChild(mk('hard','<div style="font-size:15px">'+(meta.title||'PostgreSQL')+'<br>'+meta.label+'</div>'));
  IMGS=[];bk.querySelectorAll('img').forEach(im=>IMGS[+im.dataset.n]=im);
  flip=new St.PageFlip(bk,{width:w,height:h,size:'fixed',showCover:true,maxShadowOpacity:.6,flippingTime:700,usePortrait:false,drawShadow:true,useMouseEvents:false,mobileScrollSupport:false});
  flip.loadFromHTML(bk.querySelectorAll('.pg'));

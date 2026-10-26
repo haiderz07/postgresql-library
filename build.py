@@ -17,7 +17,9 @@ BOOKS = {
     "17": ("PostgreSQL 17.11 Documentation.pdf", "17.11"),
     "18": ("PostgreSQL 18.6 Documentation.pdf", "18.6"),
     "19": ("postgresql-19-A4.pdf", "19"),
+    "citus": ("Citus Documentation.pdf", "13.0.1"),
 }
+TITLES = {"citus": "Citus"}
 CH = re.compile(r"^(Chapter \d+\. .+|Part [IVX]+\. .+|Appendix [A-Z]\. .+|Preface|Index|Bibliography)\s*$")
 
 
@@ -59,6 +61,13 @@ def toc_for(d):
         return toc
     toc = []
     for i in range(len(d)):
+        head = d[i].get_text().split("\n", 4)
+        if head[0].strip() == "CHAPTER" and len(head) > 2:
+            toc.append([i + 1, f"Chapter {len(toc) + 1}. " + head[2].strip().title().replace("Sql", "SQL").replace("Api", "API").replace(" An ", " an ")])
+    if len(toc) >= 10:
+        return toc
+    toc = []
+    for i in range(len(d)):
         for ln in d[i].get_text().split("\n", 3)[:3]:
             ln = ln.strip()
             if CH.match(ln):
@@ -85,6 +94,8 @@ def build(book):
                 print(book, f"{k + 1}/{len(jobs)}", flush=True)
     allt = [x for s in sorted(texts) for x in texts[s]]
     meta = {"id": book, "label": label, "pages": n, "w": r.width, "h": r.height, "chunk": CHUNK, "toc": toc_for(d)}
+    if book in TITLES:
+        meta["title"] = TITLES[book]
     json.dump(meta, open(os.path.join(base, "meta.json"), "w"), separators=(",", ":"))
     json.dump(allt, open(os.path.join(base, "search.json"), "w", encoding="utf-8"), ensure_ascii=False, separators=(",", ":"))
     print(book, "done", n, "pages")
