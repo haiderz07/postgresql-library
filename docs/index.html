@@ -109,6 +109,11 @@ textarea.nt{display:block;width:100%;min-height:54px;margin-top:6px;background:#
 <script src="page-flip.js"></script>
 <script>
 const $=s=>document.querySelector(s);
+// GoatCounter site code (https://<code>.goatcounter.com); analytics stays off while empty
+const GC_CODE='';
+if(GC_CODE){const s=document.createElement('script');s.async=true;s.dataset.goatcounter=`https://${GC_CODE}.goatcounter.com/count`;s.src='https://gc.zgo.at/count.js';document.head.appendChild(s)}
+const track=(name,title)=>{try{window.goatcounter&&goatcounter.count&&goatcounter.count({path:name,title:title||name,event:true})}catch(e){}};
+document.addEventListener('click',e=>{const a=e.target.closest&&e.target.closest('a[href*="thesev1database.com"],a[href*="linkedin.com"]');if(a)track('click/'+(a.href.includes('linkedin')?'linkedin':'jobs-or-product'))});
 let flip,ver,meta,N,IMGS=[],W=595,Hh=842,PW=0,tab='toc',lastQ='';
 const COLORS={y:'#ffd84d',g:'#7be08a',p:'#ff9ec7',b:'#7cc4ff'};
 const chunks={};let searchIdx={};
@@ -128,7 +133,7 @@ $('#fs').onclick=()=>document.fullscreenElement?document.exitFullscreen():docume
 document.querySelectorAll('#tabs button').forEach(b=>b.onclick=()=>{tab=b.dataset.t;renderPane()});
 
 async function openBook(v){
- ver=v;$('#shelf').style.display='none';$('#reader').style.display='flex';$('#msg').textContent='Opening book…';
+ ver=v;track('book/'+v,'Opened book '+v);$('#shelf').style.display='none';$('#reader').style.display='flex';$('#msg').textContent='Opening book…';
  meta=await (await fetch(`books/${v}/meta.json`)).json();N=meta.pages;W=meta.w;Hh=meta.h;$('#msg').textContent='';
  chunks[v]=chunks[v]||{};tab='toc';
  if(innerWidth>700)$('#side').classList.add('on');else $('#side').classList.remove('on');
@@ -231,7 +236,7 @@ function renderPane(){
   const out=document.createElement('div');pane.appendChild(out);inp.onkeydown=e=>{if(e.key=='Enter')search(inp.value,out)};inp.focus();if(lastQ)search(lastQ,out)}
  if(tab=='saved')renderSaved(pane);
 }
-async function search(q,out){q=q.trim();lastQ=q;if(!q)return;out.innerHTML='<a>Searching…</a>';
+async function search(q,out){q=q.trim();lastQ=q;if(!q)return;track('search/'+ver,'Search');out.innerHTML='<a>Searching…</a>';
  if(!searchIdx[ver])searchIdx[ver]=await (await fetch(`books/${ver}/search.json`)).json();
  const ql=q.toLowerCase(),T=searchIdx[ver],first=meta.toc.length?meta.toc[0][0]:1,MAX=100000,CAP=6;
  const chapOf=p=>{let c=null,part=null;for(const [pg,t] of meta.toc){if(pg>p)break;if(/^Part /.test(t))part=t;else c=t}return {part,c}};
