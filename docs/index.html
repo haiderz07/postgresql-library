@@ -32,6 +32,7 @@ footer small{display:block;max-width:640px;margin:10px auto 0;font-size:11px;lin
 #bar{min-height:48px;display:flex;align-items:center;gap:8px;padding:6px 12px;background:#150c07cc;border-bottom:1px solid #5a4329;font-size:14px;flex-wrap:wrap}
 #bar button,#bar input,#side input{background:#3a281b;color:var(--ink);border:1px solid #6b5033;border-radius:4px;padding:5px 10px;font:inherit;cursor:pointer}
 #bar input{width:78px;cursor:text}#bar .sp{flex:1}
+#jobsl{color:var(--gold);text-decoration:none;font-size:13px;padding:5px 10px;border:1px solid #6b5033;border-radius:4px;white-space:nowrap}#jobsl:hover{background:#3a281b}
 #main{flex:1;display:flex;min-height:0}
 #side{width:310px;background:#1b110bee;border-right:1px solid #5a4329;display:none;flex-direction:column;min-height:0}
 #side.on{display:flex}
@@ -97,7 +98,7 @@ textarea.nt{display:block;width:100%;min-height:54px;margin-top:6px;background:#
 <div id="reader">
  <div id="bar"><button id="home">📚 Library</button><button id="tocb">☰ Menu</button>
   <button id="first" title="Cover">⏮</button><span id="where"></span><input id="goto" placeholder="Page #" inputmode="numeric"><button id="go">Go</button>
-  <button id="bmk" title="Bookmark this page">🔖</button><button id="nbtn" title="Add a note to this page">📝</button><span class="sp"></span><button id="fs">⛶</button></div>
+  <button id="bmk" title="Bookmark this page">🔖</button><button id="nbtn" title="Add a note to this page">📝</button><span class="sp"></span><a id="jobsl" href="https://thesev1database.com/jobs?utm_source=pglibrary&amp;utm_medium=reader&amp;utm_campaign=jobs" target="_blank" rel="noopener">PostgreSQL Jobs ↗</a><button id="fs">⛶</button></div>
  <div id="main">
   <div id="side"><div id="tabs"><button data-t="toc" class="on">Contents</button><button data-t="find">Search</button><button data-t="saved">Saved</button></div><div id="pane"></div></div>
   <div id="stage"><div class="zone" id="zl">‹</div><div id="book"></div><div class="zone" id="zr">›</div><div id="msg"></div></div>
