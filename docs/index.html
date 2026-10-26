@@ -1,0 +1,249 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8">
+<title>PostgreSQL Library — read the official manuals like real books</title>
+<meta name="description" content="A free library of PostgreSQL manuals (16, 17, 18, 19) in a book-style page-flip reader with search, copy, highlights and bookmarks.">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%232a1b12'/%3E%3Cpath d='M6 8h9v16H6zM17 8h9v16h-9z' fill='%23d9b25f'/%3E%3C/svg%3E">
+<style>
+:root{--gold:#d9b25f;--paper:#f6efe0;--ink:#eadfc8;--mut:#9d8660}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%}
+body{font-family:Georgia,'Times New Roman',serif;color:var(--ink);background:radial-gradient(ellipse at center,#4a3324 0%,#2a1b12 70%,#160d08 100%);overflow:hidden}
+#shelf{position:fixed;inset:0;overflow:auto;display:flex;flex-direction:column;align-items:center;padding:42px 18px 20px}
+#shelf h1{font-weight:normal;letter-spacing:.2em;color:var(--gold);margin:0;font-size:clamp(22px,4vw,34px);text-align:center}
+#shelf .sub{color:var(--mut);margin:10px 0 34px;text-align:center;max-width:560px;line-height:1.5}
+#books{display:flex;gap:38px;flex-wrap:wrap;justify-content:center;max-width:1000px;padding-bottom:26px;border-bottom:10px solid #1a0f08;box-shadow:0 14px 0 -4px #0005}
+.cover{width:178px;height:256px;border-radius:4px 10px 10px 4px;padding:24px 16px;cursor:pointer;box-shadow:-6px 8px 18px #000a,inset 10px 0 12px #0006;transition:.3s;display:flex;flex-direction:column;justify-content:space-between;text-align:center;border:0;color:inherit;font:inherit}
+.cover:hover,.cover:focus-visible{transform:translateY(-12px) rotate(-1.5deg);outline:none}
+.cover b{font-size:44px;color:var(--gold);font-weight:normal}.cover small{letter-spacing:.25em;color:#e9d9a8}
+.cover .t{font-size:14px;color:#f3e6bf;border-top:1px solid var(--gold);border-bottom:1px solid var(--gold);padding:8px 0}
+.v16{background:linear-gradient(135deg,#1f3a5f,#14263f)}.v17{background:linear-gradient(135deg,#6a1f2b,#41111a)}
+.v18{background:linear-gradient(135deg,#1f5a46,#123a2c)}.v19{background:linear-gradient(135deg,#5a3d1f,#3a2510)}
+.hint{color:var(--mut);font-size:13px;margin-top:18px}
+.cta{margin:38px 0 0;max-width:640px;width:100%;display:flex;gap:16px;align-items:center;justify-content:space-between;flex-wrap:wrap;
+ background:#1b110bcc;border:1px solid #6b5033;border-radius:10px;padding:16px 20px}
+.cta div{line-height:1.45}.cta strong{color:var(--gold);font-weight:normal;font-size:17px}.cta span{color:var(--mut);font-size:14px}
+.cta a.btn{background:var(--gold);color:#2a1b12;text-decoration:none;padding:9px 16px;border-radius:6px;font-size:14px;white-space:nowrap}
+.cta a.btn:hover{background:#e8c477}
+footer{margin:34px 0 10px;text-align:center;color:var(--mut);font-size:13px;line-height:1.9}
+footer a{color:var(--gold);text-decoration:none;border-bottom:1px dotted var(--gold)}
+footer small{display:block;max-width:640px;margin:10px auto 0;font-size:11px;line-height:1.5;opacity:.8}
+#reader{position:fixed;inset:0;display:none;flex-direction:column}
+#bar{min-height:48px;display:flex;align-items:center;gap:8px;padding:6px 12px;background:#150c07cc;border-bottom:1px solid #5a4329;font-size:14px;flex-wrap:wrap}
+#bar button,#bar input,#side input{background:#3a281b;color:var(--ink);border:1px solid #6b5033;border-radius:4px;padding:5px 10px;font:inherit;cursor:pointer}
+#bar input{width:78px;cursor:text}#bar .sp{flex:1}
+#main{flex:1;display:flex;min-height:0}
+#side{width:310px;background:#1b110bee;border-right:1px solid #5a4329;display:none;flex-direction:column;min-height:0}
+#side.on{display:flex}
+#tabs{display:flex;border-bottom:1px solid #5a4329}
+#tabs button{flex:1;background:none;border:0;color:var(--mut);padding:9px 4px;font:inherit;font-size:13px;cursor:pointer;border-bottom:2px solid transparent}
+#tabs button.on{color:var(--gold);border-color:var(--gold)}
+#pane{flex:1;overflow:auto;padding:10px}
+#side input{width:100%;margin-bottom:8px;cursor:text}
+#pane a,#pane .item{display:block;padding:6px;font-size:13px;cursor:pointer;border-bottom:1px dotted #4b3824;color:var(--ink);text-decoration:none}
+#pane a:hover,#pane .item:hover{background:#3a281b;color:var(--gold)}#pane a span,#pane .item span.pn{float:right;color:var(--mut);margin-left:8px}
+.item .x{float:right;margin-left:8px;color:#c77;cursor:pointer}.item q{display:block;font-size:12px;color:#cdbb92;quotes:none;margin-top:3px}
+.sw{display:inline-block;width:10px;height:10px;border-radius:2px;margin-right:6px}
+.row{display:flex;gap:6px;margin-top:10px}.row button{flex:1;background:#3a281b;color:var(--ink);border:1px solid #6b5033;border-radius:4px;padding:5px;cursor:pointer;font:inherit;font-size:12px}
+#stage{flex:1;display:flex;align-items:center;justify-content:center;position:relative;overflow:hidden}
+#book{box-shadow:0 20px 50px #000c}
+.pg{background:var(--paper);overflow:hidden;position:relative}
+.pg img{width:100%;height:100%;display:block;object-fit:fill;-webkit-user-drag:none;user-select:none}
+.pg.hard{background:#3a1c12;display:flex;align-items:center;justify-content:center;color:var(--gold);text-align:center;font-size:22px;padding:20px;box-shadow:inset 0 0 40px #000a}
+.pg.left::after,.pg.right::after{content:"";position:absolute;inset:0;pointer-events:none}
+.pg.left::after{background:linear-gradient(to left,#0003,transparent 8%)}.pg.right::after{background:linear-gradient(to right,#0003,transparent 8%)}
+.num{position:absolute;bottom:3px;width:100%;text-align:center;font-size:11px;color:#8a7a5a;pointer-events:none}
+.hl,.tl{position:absolute;inset:0}.hl{pointer-events:none;mix-blend-mode:multiply}.hl i{position:absolute;border-radius:2px}
+.tl{z-index:2;line-height:1;cursor:text}
+.tl span{position:absolute;white-space:pre;transform-origin:0 0;color:transparent;font-family:Georgia,serif}
+.tl span::selection{background:#3b82f655}
+.bm{position:absolute;top:0;right:18px;width:16px;height:30px;background:#c0392b;clip-path:polygon(0 0,100% 0,100% 100%,50% 75%,0 100%);z-index:3;pointer-events:none}
+.zone{position:absolute;top:0;bottom:0;width:7%;min-width:34px;z-index:5;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:46px;color:var(--gold);opacity:.35;user-select:none}
+.zone:hover{opacity:1}#zl{left:0}#zr{right:0}
+#prog{height:5px;background:#150c07}#prog div{height:100%;background:var(--gold);width:0}
+#msg{position:absolute;bottom:14px;font-size:12px;color:var(--mut)}
+#pop{position:fixed;z-index:50;display:none;background:#1b110b;border:1px solid var(--gold);border-radius:8px;padding:5px;gap:5px;align-items:center;box-shadow:0 6px 20px #000a}
+#pop button{background:#3a281b;color:var(--ink);border:1px solid #6b5033;border-radius:4px;padding:4px 9px;cursor:pointer;font:inherit;font-size:13px}
+#pop .c{width:22px;height:22px;padding:0;border-radius:50%}
+#toast{position:fixed;bottom:22px;left:50%;transform:translateX(-50%);background:#1b110b;border:1px solid var(--gold);color:var(--ink);padding:7px 14px;border-radius:6px;font-size:13px;display:none;z-index:60}
+@media(max-width:700px){#side{position:absolute;z-index:20;height:100%;width:86%}}
+</style></head><body>
+
+<div id="shelf">
+ <h1>THE POSTGRESQL LIBRARY</h1>
+ <p class="sub">The official PostgreSQL manuals, set out like real books. Open a volume, turn the pages, search, copy text and keep your own highlights and bookmarks.</p>
+ <div id="books">
+  <button class="cover v16" data-v="16"><small>THE</small><b>16</b><div class="t">PostgreSQL Documentation<br>16.15</div></button>
+  <button class="cover v17" data-v="17"><small>THE</small><b>17</b><div class="t">PostgreSQL Documentation<br>17.11</div></button>
+  <button class="cover v18" data-v="18"><small>THE</small><b>18</b><div class="t">PostgreSQL Documentation<br>18.6</div></button>
+  <button class="cover v19" data-v="19"><small>THE</small><b>19</b><div class="t">PostgreSQL Documentation<br>19</div></button>
+ </div>
+ <div class="hint">Choose a book to open it &middot; your page, highlights and bookmarks are remembered in this browser</div>
+ <div class="cta">
+  <div><strong>Searching for PostgreSQL jobs?</strong><br><span>Browse current PostgreSQL DBA, engineer and SRE openings.</span></div>
+  <a class="btn" href="https://thesev1database.com/jobs?utm_source=pglibrary&amp;utm_medium=cta&amp;utm_campaign=jobs" target="_blank" rel="noopener">See PostgreSQL jobs &rarr;</a>
+ </div>
+ <footer>
+  Built by <b>Haider Z</b> &middot;
+  <a href="https://www.linkedin.com/in/haiderzah/" target="_blank" rel="noopener">LinkedIn</a> &middot;
+  <a href="https://thesev1database.com/?utm_source=pglibrary&amp;utm_medium=footer" target="_blank" rel="noopener">My product: thesev1database.com</a>
+  <small>Unofficial reader. The manuals are the work of the PostgreSQL Global Development Group, reproduced under the PostgreSQL Licence. PostgreSQL is a trademark of the PostgreSQL Community Association of Canada.</small>
+ </footer>
+</div>
+
+<div id="reader">
+ <div id="bar"><button id="home">📚 Library</button><button id="tocb">☰ Menu</button>
+  <button id="first" title="Cover">⏮</button><span id="where"></span><input id="goto" placeholder="Page #" inputmode="numeric"><button id="go">Go</button>
+  <button id="bmk" title="Bookmark this page">🔖</button><span class="sp"></span><button id="fs">⛶</button></div>
+ <div id="main">
+  <div id="side"><div id="tabs"><button data-t="toc" class="on">Contents</button><button data-t="find">Search</button><button data-t="saved">Saved</button></div><div id="pane"></div></div>
+  <div id="stage"><div class="zone" id="zl">‹</div><div id="book"></div><div class="zone" id="zr">›</div><div id="msg"></div></div>
+ </div>
+ <div id="prog"><div></div></div>
+</div>
+<div id="pop"></div><div id="toast"></div>
+
+<script src="page-flip.js"></script>
+<script>
+const $=s=>document.querySelector(s);
+let flip,ver,meta,N,IMGS=[],W=595,Hh=842,PW=0,tab='toc',lastQ='';
+const COLORS={y:'#ffd84d',g:'#7be08a',p:'#ff9ec7',b:'#7cc4ff'};
+const chunks={};let searchIdx={};
+const store={get:k=>{try{return JSON.parse(localStorage.getItem(k))}catch(e){return null}},set:(k,v)=>localStorage.setItem(k,JSON.stringify(v))};
+const hls=()=>store.get('pgl-hl-'+ver)||[];const bms=()=>store.get('pgl-bm-'+ver)||[];
+const toast=m=>{const t=$('#toast');t.textContent=m;t.style.display='block';clearTimeout(toast.t);toast.t=setTimeout(()=>t.style.display='none',1800)};
+const esc=s=>s.replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const TITLE=v=>'PostgreSQL<br>Documentation<br>'+(meta?meta.label:v);
+
+document.querySelectorAll('.cover').forEach(c=>c.onclick=()=>openBook(c.dataset.v));
+$('#home').onclick=()=>{$('#reader').style.display='none';$('#shelf').style.display='flex';flip&&flip.destroy();flip=null;$('#book').innerHTML='';hidePop()};
+$('#tocb').onclick=()=>$('#side').classList.toggle('on');
+$('#fs').onclick=()=>document.fullscreenElement?document.exitFullscreen():document.documentElement.requestFullscreen();
+document.querySelectorAll('#tabs button').forEach(b=>b.onclick=()=>{tab=b.dataset.t;renderPane()});
+
+async function openBook(v){
+ ver=v;$('#shelf').style.display='none';$('#reader').style.display='flex';$('#msg').textContent='Opening book…';
+ meta=await (await fetch(`books/${v}/meta.json`)).json();N=meta.pages;W=meta.w;Hh=meta.h;$('#msg').textContent='';
+ chunks[v]=chunks[v]||{};tab='toc';
+ if(innerWidth>700)$('#side').classList.add('on');else $('#side').classList.remove('on');
+ renderPane();build(+(localStorage['pg'+v]||0));
+}
+function build(start){
+ const st=$('#stage');const h=Math.min(st.clientHeight-30,(st.clientWidth-120)/2*Hh/W);const w=Math.round(h*W/Hh);PW=w;
+ const bk=$('#book');bk.innerHTML='';
+ const mk=(cls,html)=>{const d=document.createElement('div');d.className='pg '+cls;d.innerHTML=html;return d};
+ bk.appendChild(mk('hard',`<div><div style="font-size:15px;letter-spacing:.3em;color:#e9d9a8">THE</div><div style="font-size:70px">${ver}</div><div>${TITLE(ver)}</div></div>`));
+ bk.appendChild(mk('hard','<div style="font-size:13px;color:#e9d9a8">PostgreSQL Global<br>Development Group</div>'));
+ for(let i=1;i<=N;i++){const p=mk('','<img alt="Page '+i+'" data-n="'+i+'"><div class="hl"></div><div class="tl"></div><div class="num">'+i+'</div>');p.dataset.n=i;bk.appendChild(p)}
+ if(N%2)bk.appendChild(mk('',''));
+ bk.appendChild(mk('hard','<div style="font-size:13px;color:#e9d9a8">End</div>'));
+ bk.appendChild(mk('hard','<div style="font-size:15px">PostgreSQL<br>'+meta.label+'</div>'));
+ IMGS=[];bk.querySelectorAll('img').forEach(im=>IMGS[+im.dataset.n]=im);
+ flip=new St.PageFlip(bk,{width:w,height:h,size:'fixed',showCover:true,maxShadowOpacity:.6,flippingTime:700,usePortrait:false,drawShadow:true,useMouseEvents:false,mobileScrollSupport:false});
+ flip.loadFromHTML(bk.querySelectorAll('.pg'));
+ flip.on('flip',e=>upd(e.data));
+ upd(start);if(start)flip.turnToPage(start);
+}
+function load(i){
+ for(let n=i-2;n<=i+12;n++){if(n<1||n>N)continue;const im=IMGS[n];
+  if(im&&!im.getAttribute('src')){im.src=`books/${ver}/p/${n}.webp`;if(Math.abs(n-i)<=3)layer(n)}}}
+function upd(i){localStorage['pg'+ver]=i;const p=Math.max(0,i-1);
+ $('#where').textContent=`Page ${p||'cover'} – ${Math.min(N,p+1)} of ${N}`;
+ $('#prog div').style.width=(i/(N+4)*100)+'%';load(i);setTimeout(()=>{for(let n=Math.max(1,i-1);n<=Math.min(N,i+2);n++)layer(n)},50);paintBm()}
+function goPage(p){load(p+1);flip.turnToPage(p+1);upd(flip.getCurrentPageIndex())}
+const curPage=()=>Math.max(1,flip?flip.getCurrentPageIndex()-1:1);
+$('#go').onclick=()=>{const p=parseInt($('#goto').value);if(p>=1&&p<=N)goPage(p)};
+$('#goto').onkeydown=e=>{if(e.key=='Enter')$('#go').click()};
+$('#first').onclick=()=>flip.turnToPage(0);
+const next=()=>flip&&flip.flipNext(),prev=()=>flip&&flip.flipPrev();
+$('#zr').onclick=next;$('#zl').onclick=prev;
+document.addEventListener('keydown',e=>{if(!flip||/INPUT|TEXTAREA/.test(e.target.tagName))return;
+ if(e.key=='ArrowRight'||e.key=='PageDown')next();if(e.key=='ArrowLeft'||e.key=='PageUp')prev()});
+let tx=null;$('#stage').addEventListener('touchstart',e=>{tx=e.touches.length==1?e.touches[0].clientX:null},{passive:true});
+$('#stage').addEventListener('touchend',e=>{if(tx===null||String(getSelection()))return;const dx=e.changedTouches[0].clientX-tx;if(Math.abs(dx)>70)dx<0?next():prev();tx=null});
+
+/* ---- text layer ---- */
+async function getChunk(c){const m=chunks[ver];if(!m[c])m[c]=fetch(`books/${ver}/t/${c}.json`).then(r=>r.json());return m[c]}
+async function layer(n){
+ const pg=document.querySelector(`.pg[data-n="${n}"]`);if(!pg||pg.dataset.tl)return;pg.dataset.tl=1;
+ const data=await getChunk(Math.floor((n-1)/meta.chunk));const lines=data[n]||[];
+ const s=PW/1000,tl=pg.querySelector('.tl');const frag=document.createDocumentFragment();
+ for(const [x,y,w,h,t] of lines){const sp=document.createElement('span');sp.textContent=t;
+  sp.style.cssText=`left:${x*s}px;top:${y*s}px;font-size:${h*s*.88}px`;sp.dataset.w=w*s;frag.appendChild(sp)}
+ tl.appendChild(frag);
+ tl.querySelectorAll('span').forEach(sp=>{const w=sp.scrollWidth;if(w)sp.style.transform=`scaleX(${Math.min(2,sp.dataset.w/w)})`});
+ paintHl(n);
+}
+/* ---- selection, copy, highlight ---- */
+function hidePop(){$('#pop').style.display='none'}
+function selInfo(){
+ const sel=getSelection();if(!sel||sel.isCollapsed||!sel.rangeCount)return null;
+ const r=sel.getRangeAt(0),per={};
+ document.querySelectorAll('.pg[data-n]').forEach(pg=>{
+  if(!pg.dataset.tl)return;const pr=pg.getBoundingClientRect(),n=+pg.dataset.n,s=PW/1000;
+  const rects=[],txt=[];
+  pg.querySelectorAll('.tl span').forEach(sp=>{if(!sel.containsNode(sp,true))return;
+   const rr=document.createRange();rr.selectNodeContents(sp);
+   if(sp.firstChild==r.startContainer||sp.firstChild==r.endContainer){
+     const a=sp.firstChild==r.startContainer?r.startOffset:0,b=sp.firstChild==r.endContainer?r.endOffset:sp.firstChild.length;rr.setStart(sp.firstChild,a);rr.setEnd(sp.firstChild,b)}
+   const bb=rr.getBoundingClientRect();if(!bb.width)return;
+   rects.push([(bb.left-pr.left)/s,(bb.top-pr.top)/s,bb.width/s,bb.height/s]);txt.push(rr.toString())});
+  if(rects.length)per[n]={rects,text:txt.join(' ').replace(/\s+/g,' ').trim()}});
+ return {text:sel.toString(),per,end:r.getBoundingClientRect()};
+}
+function showPop(){
+ const info=selInfo();if(!info||!info.text.trim()){hidePop();return}
+ const p=$('#pop');p.innerHTML='<button data-a="copy">Copy</button>'+Object.entries(COLORS).map(([k,c])=>`<button class="c" data-a="${k}" style="background:${c}" title="Highlight"></button>`).join('');
+ p.style.display='flex';p.style.left=Math.max(8,Math.min(innerWidth-230,info.end.left))+'px';p.style.top=Math.max(8,info.end.top-44)+'px';
+ p.onmousedown=e=>e.preventDefault();
+ p.onclick=async e=>{const a=e.target.dataset.a;if(!a)return;const inf=selInfo();if(!inf)return;
+  if(a=='copy'){try{await navigator.clipboard.writeText(inf.text)}catch(_){document.execCommand('copy')}toast('Copied')}
+  else{const all=hls();for(const [n,v] of Object.entries(inf.per))all.push({id:Date.now()+'-'+n,page:+n,color:a,text:v.text,rects:v.rects});
+   store.set('pgl-hl-'+ver,all);Object.keys(inf.per).forEach(n=>paintHl(+n));toast('Highlighted');if(tab=='saved')renderPane()}
+  getSelection().removeAllRanges();hidePop()};
+}
+document.addEventListener('mouseup',e=>{if(e.target.closest&&e.target.closest('#pop'))return;setTimeout(showPop,10)});
+document.addEventListener('keyup',e=>{if(e.shiftKey)showPop()});
+document.addEventListener('selectionchange',()=>{const s=getSelection();if(s&&s.isCollapsed)hidePop();else if(matchMedia('(pointer:coarse)').matches)setTimeout(showPop,300)});
+function paintHl(n){const pg=document.querySelector(`.pg[data-n="${n}"]`);if(!pg)return;const box=pg.querySelector('.hl');if(!box)return;box.innerHTML='';
+ const s=PW/1000;hls().filter(h=>h.page==n).forEach(h=>h.rects.forEach(([x,y,w,hh])=>{const i=document.createElement('i');
+  i.style.cssText=`left:${x*s}px;top:${y*s}px;width:${w*s}px;height:${hh*s}px;background:${COLORS[h.color]||COLORS.y};opacity:.55`;box.appendChild(i)}))}
+function paintBm(){document.querySelectorAll('.bm').forEach(b=>b.remove());
+ bms().forEach(n=>{const pg=document.querySelector(`.pg[data-n="${n}"]`);if(pg){const b=document.createElement('div');b.className='bm';pg.appendChild(b)}})}
+$('#bmk').onclick=()=>{const n=curPage(),b=bms(),i=b.indexOf(n);i<0?b.push(n):b.splice(i,1);store.set('pgl-bm-'+ver,b.sort((a,c)=>a-c));
+ toast(i<0?'Page '+n+' bookmarked':'Bookmark removed');paintBm();if(tab=='saved')renderPane()};
+
+/* ---- side pane ---- */
+function renderPane(){
+ document.querySelectorAll('#tabs button').forEach(b=>b.classList.toggle('on',b.dataset.t==tab));const pane=$('#pane');pane.innerHTML='';
+ if(tab=='toc')meta.toc.forEach(([p,t])=>{const a=document.createElement('a');a.innerHTML=esc(t)+'<span>'+p+'</span>';a.onclick=()=>goPage(p);pane.appendChild(a)});
+ if(tab=='find'){const inp=document.createElement('input');inp.placeholder='Search this book… (Enter)';inp.value=lastQ;pane.appendChild(inp);
+  const out=document.createElement('div');pane.appendChild(out);inp.onkeydown=e=>{if(e.key=='Enter')search(inp.value,out)};inp.focus();if(lastQ)search(lastQ,out)}
+ if(tab=='saved')renderSaved(pane);
+}
+async function search(q,out){q=q.trim();lastQ=q;if(!q)return;out.innerHTML='<a>Searching…</a>';
+ if(!searchIdx[ver])searchIdx[ver]=await (await fetch(`books/${ver}/search.json`)).json();
+ const ql=q.toLowerCase(),res=[];const T=searchIdx[ver];
+ for(let i=0;i<T.length&&res.length<60;i++){const k=T[i].toLowerCase().indexOf(ql);if(k>=0)res.push([i+1,T[i].slice(Math.max(0,k-45),k+90)])}
+ out.innerHTML=res.length?'':'<a>No matches</a>';
+ res.forEach(([p,t])=>{const a=document.createElement('a');a.innerHTML=`<span>${p}</span>${esc(t)}`;a.onclick=()=>goPage(p);out.appendChild(a)})}
+function renderSaved(pane){
+ const b=bms(),h=hls();
+ pane.insertAdjacentHTML('beforeend',`<div style="color:var(--mut);font-size:12px;margin-bottom:6px">Bookmarks</div>`);
+ if(!b.length)pane.insertAdjacentHTML('beforeend','<div class="item" style="cursor:default">None yet — press 🔖 in the top bar.</div>');
+ b.forEach(n=>{const d=document.createElement('div');d.className='item';d.innerHTML=`<span class="x">✕</span><span class="pn">p. ${n}</span>Page ${n}`;
+  d.onclick=e=>{if(e.target.className=='x'){store.set('pgl-bm-'+ver,bms().filter(x=>x!=n));paintBm();renderPane()}else goPage(n)};pane.appendChild(d)});
+ pane.insertAdjacentHTML('beforeend',`<div style="color:var(--mut);font-size:12px;margin:14px 0 6px">Highlights</div>`);
+ if(!h.length)pane.insertAdjacentHTML('beforeend','<div class="item" style="cursor:default">Select text on a page, then pick a colour.</div>');
+ h.sort((a,c)=>a.page-c.page).forEach(x=>{const d=document.createElement('div');d.className='item';
+  d.innerHTML=`<span class="x">✕</span><span class="pn">p. ${x.page}</span><i class="sw" style="background:${COLORS[x.color]}"></i><q>${esc(x.text.slice(0,140))}</q>`;
+  d.onclick=e=>{if(e.target.className=='x'){store.set('pgl-hl-'+ver,hls().filter(y=>y.id!=x.id));paintHl(x.page);renderPane()}else goPage(x.page)};pane.appendChild(d)});
+ const r=document.createElement('div');r.className='row';r.innerHTML='<button id="ex">Export</button><button id="im">Import</button>';pane.appendChild(r);
+ $('#ex').onclick=()=>{const blob=new Blob([JSON.stringify({book:ver,bookmarks:bms(),highlights:hls()},null,1)],{type:'application/json'});
+  const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=`postgresql-${ver}-notes.json`;a.click()};
+ $('#im').onclick=()=>{const f=document.createElement('input');f.type='file';f.accept='.json';f.onchange=async()=>{try{const d=JSON.parse(await f.files[0].text());
+  const m=hls(),ids=new Set(m.map(x=>x.id));(d.highlights||[]).forEach(x=>{if(!ids.has(x.id))m.push(x)});store.set('pgl-hl-'+ver,m);
+  store.set('pgl-bm-'+ver,[...new Set([...bms(),...(d.bookmarks||[])])].sort((a,c)=>a-c));
+  document.querySelectorAll('.pg[data-n]').forEach(p=>paintHl(+p.dataset.n));paintBm();renderPane();toast('Imported')}catch(e){toast('Invalid file')}};f.click()};
+}
+</script></body></html>
