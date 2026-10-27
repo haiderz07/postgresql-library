@@ -56,6 +56,7 @@ textarea.nt{display:block;width:100%;min-height:54px;margin-top:6px;background:#
 #book{box-shadow:0 20px 50px #000c}
 .pg{background:var(--paper);overflow:hidden;position:relative}
 .pg img{width:100%;height:100%;display:block;object-fit:fill;-webkit-user-drag:none;user-select:none}
+.pg canvas.hi{position:absolute;inset:0;width:100%;height:100%;z-index:1;pointer-events:none}
 .pg.hard{background:#3a1c12;display:flex;align-items:center;justify-content:center;color:var(--gold);text-align:center;font-size:22px;padding:20px;box-shadow:inset 0 0 40px #000a}
 .pg.left::after,.pg.right::after{content:"";position:absolute;inset:0;pointer-events:none}
 .pg.left::after{background:linear-gradient(to left,#0003,transparent 8%)}.pg.right::after{background:linear-gradient(to right,#0003,transparent 8%)}
@@ -176,7 +177,27 @@ function load(i){
   if(im&&!im.getAttribute('src')){im.src=`books/${ver}/p/${n}.webp`;if(Math.abs(n-i)<=3)layer(n)}}}
 function upd(i){localStorage['pg'+ver]=i;const p=Math.max(0,i-1);
  $('#where').textContent=isSingle()?`Page ${p||'cover'} of ${N}`:`Page ${p||'cover'} – ${Math.min(N,p+1)} of ${N}`;
- $('#prog div').style.width=(i/(N+4)*100)+'%';load(i);setTimeout(()=>{for(let n=Math.max(1,i-1);n<=Math.min(N,i+2);n++)layer(n)},50);paintBm()}
+ $('#prog div').style.width=(i/(N+4)*100)+'%';load(i);hiDeb();setTimeout(()=>{for(let n=Math.max(1,i-1);n<=Math.min(N,i+2);n++)layer(n)},50);paintBm()}
+/* ---- sharp zoom: render the original PDF page with PDF.js when zoomed ---- */
+const PDFJS='https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/';const pdfDocs={};let hiTok=0,hiTimer;
+function loadPdfjs(){return window.pdfjsLib?Promise.resolve():new Promise((res,rej)=>{const s=document.createElement('script');s.src=PDFJS+'pdf.min.js';
+ s.onload=()=>{pdfjsLib.GlobalWorkerOptions.workerSrc=PDFJS+'pdf.worker.min.js';res()};s.onerror=rej;document.head.appendChild(s)})}
+function hiDeb(){clearTimeout(hiTimer);hiTimer=setTimeout(hires,120)}
+async function hires(){
+ const tk=++hiTok,z=VIEW.zoom||1,cur=Math.max(1,(flip?flip.getCurrentPageIndex():0)-1);
+ const want=new Set(z>1&&flip&&flip.getCurrentPageIndex()>0?(isSingle()?[cur]:[cur,cur+1]):[]);
+ document.querySelectorAll('.pg canvas.hi').forEach(c=>{if(!want.has(+c.parentNode.dataset.n))c.remove()});
+ if(!want.size)return;
+ try{await loadPdfjs();const v=ver;if(!pdfDocs[v])pdfDocs[v]=pdfjsLib.getDocument(`books/${v}/book.pdf`).promise;const doc=await pdfDocs[v];
+  for(const n of want){if(n>N||tk!==hiTok||v!==ver)return;
+   const pg=document.querySelector(`.pg[data-n="${n}"]`);if(!pg||pg.querySelector('canvas.hi'))continue;
+   const page=await doc.getPage(n);const base=page.getViewport({scale:1});
+   const k=Math.min(PW*Math.min(devicePixelRatio||1,2)/base.width,4200/base.width),vp=page.getViewport({scale:k});
+   const cv=document.createElement('canvas');cv.className='hi';cv.width=Math.round(vp.width);cv.height=Math.round(vp.height);
+   await page.render({canvasContext:cv.getContext('2d'),viewport:vp}).promise;
+   if(tk!==hiTok||v!==ver||pg.querySelector('canvas.hi'))continue;pg.insertBefore(cv,pg.querySelector('.hl'))}
+ }catch(e){}
+}
 function goPage(p){load(p+1);flip.turnToPage(p+1);upd(flip.getCurrentPageIndex())}
 const curPage=()=>Math.max(1,flip?flip.getCurrentPageIndex()-1:1);
 $('#go').onclick=()=>{const p=parseInt($('#goto').value);if(p>=1&&p<=N)goPage(p)};
