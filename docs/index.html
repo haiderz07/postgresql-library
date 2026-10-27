@@ -199,7 +199,7 @@ async function hires(){
    if(tk!==hiTok||v!==ver||pg.querySelector('canvas.hi'))continue;pg.insertBefore(cv,pg.querySelector('.hl'))}
  }catch(e){}
 }
-function goPage(p){load(p+1);flip.turnToPage(p+1);upd(flip.getCurrentPageIndex())}
+function goPage(p){if(innerWidth<=700)$('#side').classList.remove('on');load(p+1);flip.turnToPage(p+1);upd(flip.getCurrentPageIndex())}
 const curPage=()=>Math.max(1,flip?flip.getCurrentPageIndex()-1:1);
 $('#go').onclick=()=>{const p=parseInt($('#goto').value);if(p>=1&&p<=N)goPage(p)};
 $('#goto').onkeydown=e=>{if(e.key=='Enter')$('#go').click()};
