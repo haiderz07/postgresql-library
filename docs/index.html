@@ -162,18 +162,19 @@ function build(start){
  const mk=(cls,html)=>{const d=document.createElement('div');d.className='pg '+cls;d.innerHTML=html;return d};
  bk.appendChild(mk('hard',`<div><div style="font-size:15px;letter-spacing:.3em;color:#e9d9a8">THE</div><div style="font-size:70px">${ver}</div><div>${TITLE(ver)}</div></div>`));
  bk.appendChild(mk('hard','<div style="font-size:13px;color:#e9d9a8">PostgreSQL Global<br>Development Group</div>'));
- for(let i=1;i<=N;i++){const p=mk('','<img alt="Page '+i+'" data-n="'+i+'"><div class="hl"></div><div class="tl"></div><div class="num">'+i+'</div>');p.dataset.n=i;bk.appendChild(p)}
+ for(let i=1;i<=N;i++){const p=mk('','<img alt="Page '+i+'" data-n="'+i+'" decoding="async">');p.dataset.n=i;bk.appendChild(p)}
  if(N%2)bk.appendChild(mk('',''));
  bk.appendChild(mk('hard','<div style="font-size:13px;color:#e9d9a8">End</div>'));
  bk.appendChild(mk('hard','<div style="font-size:15px">'+(meta.title||'PostgreSQL')+'<br>'+meta.label+'</div>'));
  IMGS=[];bk.querySelectorAll('img').forEach(im=>IMGS[+im.dataset.n]=im);
- flip=new St.PageFlip(bk,{width:w,height:h,size:'fixed',showCover:true,maxShadowOpacity:.6,flippingTime:700,usePortrait:one,autoSize:false,drawShadow:true,useMouseEvents:false,mobileScrollSupport:false});
+ flip=new St.PageFlip(bk,{width:w,height:h,size:'fixed',showCover:true,maxShadowOpacity:LITE?0:.6,flippingTime:LITE?380:700,usePortrait:one,autoSize:false,drawShadow:!LITE,useMouseEvents:false,mobileScrollSupport:false});
  flip.loadFromHTML(bk.querySelectorAll('.pg'));
  flip.on('flip',e=>upd(e.data));
  upd(start);if(start)flip.turnToPage(start);
 }
+const LITE=matchMedia('(pointer:coarse)').matches||innerWidth<760;
 function load(i){
- for(let n=i-2;n<=i+12;n++){if(n<1||n>N)continue;const im=IMGS[n];
+ for(let n=i-2;n<=i+(LITE?5:12);n++){if(n<1||n>N)continue;const im=IMGS[n];
   if(im&&!im.getAttribute('src')){im.src=`books/${ver}/p/${n}.webp`;if(Math.abs(n-i)<=3)layer(n)}}}
 function upd(i){localStorage['pg'+ver]=i;const p=Math.max(0,i-1);
  $('#where').textContent=isSingle()?`Page ${p||'cover'} of ${N}`:`Page ${p||'cover'} – ${Math.min(N,p+1)} of ${N}`;
@@ -215,12 +216,14 @@ $('#stage').addEventListener('touchend',e=>{if(tx===null||String(getSelection())
 async function getChunk(c){const m=chunks[ver];if(!m[c])m[c]=fetch(`books/${ver}/t/${c}.json`).then(r=>r.json());return m[c]}
 async function layer(n){
  const pg=document.querySelector(`.pg[data-n="${n}"]`);if(!pg||pg.dataset.tl)return;pg.dataset.tl=1;
+ pg.insertAdjacentHTML('beforeend','<div class="hl"></div><div class="tl"></div><div class="num">'+n+'</div>');
  const data=await getChunk(Math.floor((n-1)/meta.chunk));const lines=data[n]||[];
  const s=PW/1000,tl=pg.querySelector('.tl');const frag=document.createDocumentFragment();
  for(const [x,y,w,h,t] of lines){const sp=document.createElement('span');sp.textContent=t;
   sp.style.cssText=`left:${x*s}px;top:${y*s}px;font-size:${h*s*.88}px`;sp.dataset.w=w*s;frag.appendChild(sp)}
  tl.appendChild(frag);
- tl.querySelectorAll('span').forEach(sp=>{const w=sp.scrollWidth;if(w)sp.style.transform=`scaleX(${Math.min(2,sp.dataset.w/w)})`});
+ const sps=[...tl.children],ws=sps.map(sp=>sp.scrollWidth);
+ sps.forEach((sp,k)=>{if(ws[k])sp.style.transform=`scaleX(${Math.min(2,sp.dataset.w/ws[k])})`});
  paintHl(n);
 }
 /* ---- selection, copy, highlight ---- */
