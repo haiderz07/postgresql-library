@@ -49,6 +49,10 @@ textarea.nt{display:block;width:100%;min-height:54px;margin-top:6px;background:#
 .sw{display:inline-block;width:10px;height:10px;border-radius:2px;margin-right:6px}
 .row{display:flex;gap:6px;margin-top:10px}.row button{flex:1;background:#3a281b;color:var(--ink);border:1px solid #6b5033;border-radius:4px;padding:5px;cursor:pointer;font:inherit;font-size:12px}
 #stage{flex:1;display:flex;align-items:center;justify-content:center;position:relative;overflow:hidden}
+#sc{position:absolute;inset:0;overflow:auto;display:flex;-webkit-overflow-scrolling:touch}#sc #book{margin:auto;flex:none}
+#stage.zm #zr{right:16px}#stage.zm .zone{opacity:.2}
+#vz{display:inline-flex;gap:4px;align-items:center}#vz span{min-width:44px;text-align:center;font-size:13px}
+@media(max-width:700px){#bar{gap:5px;padding:5px 8px;font-size:13px}#bar button{padding:5px 8px}#goto{width:58px!important}#jobsl{font-size:12px;padding:5px 7px}.zone{width:26px;min-width:26px;font-size:30px}#where{flex-basis:100%;order:9}}
 #book{box-shadow:0 20px 50px #000c}
 .pg{background:var(--paper);overflow:hidden;position:relative}
 .pg img{width:100%;height:100%;display:block;object-fit:fill;-webkit-user-drag:none;user-select:none}
@@ -98,10 +102,10 @@ textarea.nt{display:block;width:100%;min-height:54px;margin-top:6px;background:#
 <div id="reader">
  <div id="bar"><button id="home">📚 Library</button><button id="tocb">☰ Menu</button>
   <button id="first" title="Cover">⏮</button><span id="where"></span><input id="goto" placeholder="Page #" inputmode="numeric"><button id="go">Go</button>
-  <button id="bmk" title="Bookmark this page">🔖</button><button id="nbtn" title="Add a note to this page">📝</button><span class="sp"></span><a id="jobsl" href="https://thesev1database.com/jobs?utm_source=pglibrary&amp;utm_medium=reader&amp;utm_campaign=jobs" target="_blank" rel="noopener">PostgreSQL Jobs ↗</a><button id="fs">⛶</button></div>
+  <button id="bmk" title="Bookmark this page">🔖</button><button id="nbtn" title="Add a note to this page">📝</button><span class="sp"></span><span id="vz"><button id="zout" title="Zoom out (-)">−</button><span id="zlv">100%</span><button id="zin" title="Zoom in (+)">+</button><button id="mode" title="Single / double page"></button></span><a id="jobsl" href="https://thesev1database.com/jobs?utm_source=pglibrary&amp;utm_medium=reader&amp;utm_campaign=jobs" target="_blank" rel="noopener">PostgreSQL Jobs ↗</a><button id="fs">⛶</button></div>
  <div id="main">
   <div id="side"><div id="tabs"><button data-t="toc" class="on">Contents</button><button data-t="find">Search</button><button data-t="saved">Saved</button></div><div id="pane"></div></div>
-  <div id="stage"><div class="zone" id="zl">‹</div><div id="book"></div><div class="zone" id="zr">›</div><div id="msg"></div></div>
+  <div id="stage"><div class="zone" id="zl">‹</div><div id="sc"><div id="book"></div></div><div class="zone" id="zr">›</div><div id="msg"></div></div>
  </div>
  <div id="prog"><div></div></div>
 </div>
@@ -140,9 +144,20 @@ async function openBook(v){
  if(innerWidth>700)$('#side').classList.add('on');else $('#side').classList.remove('on');
  renderPane();build(+(localStorage['pg'+v]||0));
 }
+const VIEW=store.get('pgl-view')||{};
+const ZOOMS=[1,1.25,1.5,2,2.5,3];
+const isSingle=()=>(VIEW.mode||(innerWidth<760?'1':'2'))=='1';
+function viewUi(){const z=VIEW.zoom||1;$('#zlv').textContent=Math.round(z*100)+'%';$('#mode').textContent=isSingle()?'▯ 1 page':'▯▯ 2 pages';$('#stage').classList.toggle('zm',z>1)}
+function rebuild(){if(!flip)return;const i=flip.getCurrentPageIndex();flip.destroy();flip=null;build(i)}
+function setZoom(d){const k=ZOOMS.indexOf(VIEW.zoom||1);const n=Math.max(0,Math.min(ZOOMS.length-1,(k<0?0:k)+d));if(ZOOMS[n]==(VIEW.zoom||1))return;VIEW.zoom=ZOOMS[n];store.set('pgl-view',VIEW);rebuild()}
+$('#zin').onclick=()=>setZoom(1);$('#zout').onclick=()=>setZoom(-1);
+$('#mode').onclick=()=>{VIEW.mode=isSingle()?'2':'1';store.set('pgl-view',VIEW);rebuild()};
+let rt,lw=innerWidth;addEventListener('resize',()=>{clearTimeout(rt);rt=setTimeout(()=>{if(innerWidth!=lw){lw=innerWidth;rebuild()}},250)});
 function build(start){
- const st=$('#stage');const h=Math.min(st.clientHeight-30,(st.clientWidth-120)/2*Hh/W);const w=Math.round(h*W/Hh);PW=w;
- let bk=$('#book');if(!bk){bk=document.createElement('div');bk.id='book';st.insertBefore(bk,$('#zr'))}bk.innerHTML='';
+ const st=$('#stage'),sc=$('#sc'),one=isSingle(),z=VIEW.zoom||1;
+ const hb=one?Math.min(sc.clientHeight-16,(sc.clientWidth-16)*Hh/W):Math.min(sc.clientHeight-30,(sc.clientWidth-120)/2*Hh/W);
+ const h=Math.round(hb*z);const w=Math.round(h*W/Hh);PW=w;viewUi();
+ let bk=$('#book');if(!bk){bk=document.createElement('div');bk.id='book';sc.appendChild(bk)}bk.innerHTML='';bk.style.width=one?w+'px':'';
  const mk=(cls,html)=>{const d=document.createElement('div');d.className='pg '+cls;d.innerHTML=html;return d};
  bk.appendChild(mk('hard',`<div><div style="font-size:15px;letter-spacing:.3em;color:#e9d9a8">THE</div><div style="font-size:70px">${ver}</div><div>${TITLE(ver)}</div></div>`));
  bk.appendChild(mk('hard','<div style="font-size:13px;color:#e9d9a8">PostgreSQL Global<br>Development Group</div>'));
@@ -151,7 +166,7 @@ function build(start){
  bk.appendChild(mk('hard','<div style="font-size:13px;color:#e9d9a8">End</div>'));
  bk.appendChild(mk('hard','<div style="font-size:15px">'+(meta.title||'PostgreSQL')+'<br>'+meta.label+'</div>'));
  IMGS=[];bk.querySelectorAll('img').forEach(im=>IMGS[+im.dataset.n]=im);
- flip=new St.PageFlip(bk,{width:w,height:h,size:'fixed',showCover:true,maxShadowOpacity:.6,flippingTime:700,usePortrait:false,drawShadow:true,useMouseEvents:false,mobileScrollSupport:false});
+ flip=new St.PageFlip(bk,{width:w,height:h,size:'fixed',showCover:true,maxShadowOpacity:.6,flippingTime:700,usePortrait:one,autoSize:false,drawShadow:true,useMouseEvents:false,mobileScrollSupport:false});
  flip.loadFromHTML(bk.querySelectorAll('.pg'));
  flip.on('flip',e=>upd(e.data));
  upd(start);if(start)flip.turnToPage(start);
@@ -160,7 +175,7 @@ function load(i){
  for(let n=i-2;n<=i+12;n++){if(n<1||n>N)continue;const im=IMGS[n];
   if(im&&!im.getAttribute('src')){im.src=`books/${ver}/p/${n}.webp`;if(Math.abs(n-i)<=3)layer(n)}}}
 function upd(i){localStorage['pg'+ver]=i;const p=Math.max(0,i-1);
- $('#where').textContent=`Page ${p||'cover'} – ${Math.min(N,p+1)} of ${N}`;
+ $('#where').textContent=isSingle()?`Page ${p||'cover'} of ${N}`:`Page ${p||'cover'} – ${Math.min(N,p+1)} of ${N}`;
  $('#prog div').style.width=(i/(N+4)*100)+'%';load(i);setTimeout(()=>{for(let n=Math.max(1,i-1);n<=Math.min(N,i+2);n++)layer(n)},50);paintBm()}
 function goPage(p){load(p+1);flip.turnToPage(p+1);upd(flip.getCurrentPageIndex())}
 const curPage=()=>Math.max(1,flip?flip.getCurrentPageIndex()-1:1);
@@ -170,9 +185,10 @@ $('#first').onclick=()=>flip.turnToPage(0);
 const next=()=>flip&&flip.flipNext(),prev=()=>flip&&flip.flipPrev();
 $('#zr').onclick=next;$('#zl').onclick=prev;
 document.addEventListener('keydown',e=>{if(!flip||/INPUT|TEXTAREA/.test(e.target.tagName))return;
+ if(e.key=='+'||e.key=='=')setZoom(1);if(e.key=='-')setZoom(-1);
  if(e.key=='ArrowRight'||e.key=='PageDown')next();if(e.key=='ArrowLeft'||e.key=='PageUp')prev()});
 let tx=null;$('#stage').addEventListener('touchstart',e=>{tx=e.touches.length==1?e.touches[0].clientX:null},{passive:true});
-$('#stage').addEventListener('touchend',e=>{if(tx===null||String(getSelection()))return;const dx=e.changedTouches[0].clientX-tx;if(Math.abs(dx)>70)dx<0?next():prev();tx=null});
+$('#stage').addEventListener('touchend',e=>{if(tx===null||String(getSelection())||(VIEW.zoom||1)>1)return;const dx=e.changedTouches[0].clientX-tx;if(Math.abs(dx)>70)dx<0?next():prev();tx=null});
 
 /* ---- text layer ---- */
 async function getChunk(c){const m=chunks[ver];if(!m[c])m[c]=fetch(`books/${ver}/t/${c}.json`).then(r=>r.json());return m[c]}
